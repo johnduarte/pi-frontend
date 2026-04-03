@@ -19,17 +19,8 @@ set -e
 
 MYTHTV_BRANCH=fixes/35
 
-sudo raspi-config nonint do_blanking 1
-sudo raspi-config nonint do_change_locale en_US.UTF-8
-sudo raspi-config nonint do_change_timezone "America/Toronto"
-sudo raspi-config nonint do_configure_keyboard us
-sudo raspi-config nonint do_overscan 1
-sudo raspi-config nonint do_boot_behaviour B4
-sudo raspi-config nonint do_hostname argilo-frontend
-
 sudo apt-get update
 sudo apt-get install -y \
-    ir-keytable \
     lirc \
     || true
 
@@ -49,19 +40,19 @@ fi
 mkdir -p ~/.config/autostart
 ln -s /usr/share/applications/mythtv.desktop ~/.config/autostart/mythtv.desktop
 
-sudo cp 90-hauppauge-remote.rules /etc/udev/rules.d/
+sudo cp 00-Streamzap_PC_Remote.conf /etc/lirc/lircd.conf.d/
+sudo cp streamzap-blacklist.conf /etc/modprobe.d/
 
-if ! grep "hauppauge_remote" /etc/lirc/lirc_options.conf; then
-    sudo sed -i -e 's/auto/\/dev\/hauppauge_remote/' /etc/lirc/lirc_options.conf
-fi
+# Set driver to 'default'
+sudo sed -i -e 's/devinput/default/' /etc/lirc/lirc_options.conf
+# Set device to '/dev/lirc0'
+sudo sed -i -e 's/auto/\/dev\/lirc0/' /etc/lirc/lirc_options.conf
 
 mkdir -p ~/.mythtv
-cp lircrc ~/.mythtv/
-
-sudo cp ir-keytable-hauppauge.toml /etc/rc_keymaps/
-
-if ! grep ir-keytable-hauppauge /etc/rc_maps.cfg; then
-    sudo sh -c "echo 'mceusb  *                        /etc/rc_keymaps/ir-keytable-hauppauge.toml' >> /etc/rc_maps.cfg"
-fi
+mkdir -p ~/.lirc
+cp lircrc ~/.lirc/mythtv
+ln -s ~/.lirc/mythtv ~/.mythtv/lircrc
+echo 'include ~/.lirc/mythtv' >> ~/.lircrc
+# ~/.mythtv/config.xml needed to connect to backend with DB credentials
 
 echo "Successfully configured MythTV."
