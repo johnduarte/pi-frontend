@@ -24,6 +24,11 @@ sudo apt-get install -y \
     lirc \
     || true
 
+# Pi 5 graphics for MythTV
+sudo apt-get install -y \
+    mesa-vulkan-drivers mesa-utils vulkan-tools \
+    || true
+
 if [ ! -f /usr/bin/mythfrontend ]; then
     mkdir -p ~/build
     git clone --branch "${MYTHTV_BRANCH}" https://github.com/MythTV/packaging.git ~/build/packaging
