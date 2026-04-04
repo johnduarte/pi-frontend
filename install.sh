@@ -17,7 +17,8 @@
 
 set -e
 
-MYTHTV_BRANCH=fixes/35
+MYTHTV_BRANCH=fixes/36
+BUILDDEST="${HOME}/proj/build"
 
 sudo apt-get update
 sudo apt-get install -y \
@@ -26,18 +27,38 @@ sudo apt-get install -y \
 
 # Pi 5 graphics for MythTV
 sudo apt-get install -y \
+    cmake
     mesa-vulkan-drivers mesa-utils vulkan-tools \
     || true
 
+# Compile dependencies
+sudo apt-get install -y \
+    git ansible \
+    || true
+
 if [ ! -f /usr/bin/mythfrontend ]; then
+    rm -fr ~/build ~/.buildrc
+    echo "BUILD_METHOD=cmake" | tee ~/.buildrc
+    echo "BUILDDEST=${BUILDDEST}" | tee -a ~/.buildrc
+    echo "MYTHTV_SOURCE_BRANCH=${MYTHTV_BRANCH}" | tee -a ~/.buildrc
     mkdir -p ~/build
+    git clone https://github.com/MythTV/ansible ~/build/ansible
+    cd ~/build/ansible
+    ./mythtv.yml --limit=localhost  # requires manual entry of password
+    git clone --branch "${MYTHTV_BRANCH}" https://github.com/MythTV/mythtv.git ~/build/mythtv
     git clone --branch "${MYTHTV_BRANCH}" https://github.com/MythTV/packaging.git ~/build/packaging
-    cd ~/build/packaging/deb
-    ./build-debs.sh "${MYTHTV_BRANCH}"
+    cd ~/build/mythtv/mythtv
+    ~/build/packaging/deb-light/build_package.sh  # about 30mins on RPI5
+    #plugins may not be needed
+    #cd ../mythplugins
+    #~/build/packaging/deb-light/build_package.sh  # about 30mins on RPI5
+    cd ../..
     dpkg-scanpackages -m . > Packages
-    echo "deb [trusted=yes] file://${HOME}/build/packaging/deb ./" | sudo tee /etc/apt/sources.list.d/mythtv.list
+    echo "deb [trusted=yes] file://${HOME}/build ./" | sudo tee /etc/apt/sources.list.d/mythtv.list
+    sudo chown _apt ./*.deb
     sudo apt-get update
-    sudo apt-get install -y mythtv-frontend
+    sudo apt-get install -y mythtv-light
+    #sudo apt-get install -y mythplugins-light
     sudo usermod -a -G mythtv "${USER}"
     cd -
 fi
