@@ -63,8 +63,10 @@ if [ ! -f /usr/bin/mythfrontend ]; then
     cd -
 fi
 
-mkdir -p ~/.config/autostart
-ln -s /usr/share/applications/mythtv.desktop ~/.config/autostart/mythtv.desktop
+if [ ! -f ~/.config/autostart/mythtv.desktop ]; then
+    mkdir -p ~/.config/autostart
+    ln -s /usr/share/applications/mythtv.desktop ~/.config/autostart/mythtv.desktop
+fi
 
 sudo cp 00-Streamzap_PC_Remote.conf /etc/lirc/lircd.conf.d/
 sudo cp streamzap-blacklist.conf /etc/modprobe.d/
@@ -77,8 +79,12 @@ sudo sed -i -e 's/auto/\/dev\/lirc0/' /etc/lirc/lirc_options.conf
 mkdir -p ~/.mythtv
 mkdir -p ~/.lirc
 cp lircrc ~/.lirc/mythtv
-ln -s ~/.lirc/mythtv ~/.mythtv/lircrc
-echo 'include ~/.lirc/mythtv' >> ~/.lircrc
+if [ ! -f ~/.mythtv/lircrc ]; then
+    ln -s ~/.lirc/mythtv ~/.mythtv/lircrc
+fi
+if [ ! -f ~/.lircrc ]; then
+    echo 'include ~/.lirc/mythtv' >> ~/.lircrc
+fi
 # ~/.mythtv/config.xml needed to connect to backend with DB credentials
 
 echo "Successfully configured MythTV."
