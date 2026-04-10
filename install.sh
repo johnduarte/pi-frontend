@@ -27,7 +27,7 @@ sudo apt-get install -y \
 
 # Pi 5 graphics for MythTV
 sudo apt-get install -y \
-    cmake
+    cmake \
     mesa-vulkan-drivers mesa-utils vulkan-tools \
     || true
 
